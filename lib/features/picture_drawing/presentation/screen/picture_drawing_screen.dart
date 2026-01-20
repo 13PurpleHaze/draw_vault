@@ -1,0 +1,215 @@
+import 'dart:convert';
+import 'dart:ui' as ui;
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:auto_route/auto_route.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:share_plus/share_plus.dart';
+
+import 'package:draw_vault/app/shared/shared.dart';
+import 'package:draw_vault/features/auth/presentation/bloc/auth_bloc.dart';
+
+import '../bloc/picture_drawing_bloc.dart';
+import '../widgets/widgets.dart';
+import '../../utils/utils.dart';
+
+/*
+  Решил для создания и для регистрации использовать 1 экран, тк они практически полностью эдентичны
+*/
+class PictureDrawingScreen extends StatefulWidget {
+  final String? pictureId;
+
+  const PictureDrawingScreen({super.key, this.pictureId});
+
+  @override
+  State<PictureDrawingScreen> createState() => _PictureDrawingScreenState();
+}
+
+class _PictureDrawingScreenState extends State<PictureDrawingScreen> {
+  final picker = ImagePicker();
+  // Состояния для редактирования канваса
+  final List<Stroke> strokes = [];
+  Color currentColor = Colors.black;
+  double currentWidth = 4;
+  bool isEraser = false;
+
+  ui.Image?
+  image; // Нужен чтобы после того как выбрали изображение нарисовать его на канвасе
+  GlobalKey canvasKey =
+      GlobalKey(); // нужен чтобы из канваса сделать изображение
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.pictureId != null) {
+      final user = context.read<AuthBloc>().currentUser!;
+      context.read<PictureDrawingBloc>().add(
+        LoadPictureImageDrawing(userId: user.id, pictureId: widget.pictureId!),
+      );
+    }
+  }
+
+  Future<void> _onPickImagePressed() async {
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      final pickedImage = await convertXFileToImage(pickedFile);
+      setState(() {
+        image = pickedImage;
+      });
+    }
+  }
+
+  /*
+    captureImage - из канваса в ui.Image
+    convertImageToXFile - из ui.Image в файл чтобы потом сохранить в галерею
+  */
+  Future<void> _onShareToGalleryPressed() async {
+    final image = await captureImage(canvasKey: canvasKey);
+    final xfile = await convertImageToXFile(image);
+    SharePlus.instance.share(ShareParams(files: [xfile]));
+  }
+
+  Future<void> _onSavePressed(BuildContext context) async {
+    final capturedImage = await captureImage(canvasKey: canvasKey);
+    final xfile = await convertImageToXFile(capturedImage);
+
+    // Получаем нужные для сохранения значения - userId, название, data
+    final user = context.read<AuthBloc>().currentUser!;
+    final bytes = await xfile.readAsBytes();
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final name = 'drawing_$timestamp.png';
+
+    final base64Image = base64Encode(bytes);
+
+    setState(() {
+      image = capturedImage;
+    });
+
+    if (widget.pictureId != null) {
+      context.read<PictureDrawingBloc>().add(
+        UpdatePicturePressed(
+          userId: user.id,
+          name: name,
+          data: base64Image,
+          path: xfile.path,
+          pictureId: widget.pictureId!,
+        ),
+      );
+    } else {
+      context.read<PictureDrawingBloc>().add(
+        SavePicturePressed(
+          userId: user.id,
+          name: name,
+          data: base64Image,
+          path: xfile.path,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AppScaffold(
+      appBar: AppAppbar(
+        title: widget.pictureId != null
+            ? 'Редактирование'
+            : 'Новое изображение',
+        actions: [
+          IconButton(
+            onPressed: () {
+              _onSavePressed(context);
+            },
+            icon: Image.asset('assets/icons/ok.png'),
+          ),
+        ],
+      ),
+      body: BlocConsumer<PictureDrawingBloc, PictureDrawingState>(
+        listener: (context, state) {
+          if (AutoRouter.of(context).canPop() && state is PictureDrawingFails ||
+              state is PictureDrawingSuccess) {
+            Navigator.of(context).pop();
+          }
+          if (state is PictureDrawingFails) {
+            showAlert(
+              context: context,
+              title: 'Ошибка',
+              message: state.message,
+            );
+          }
+          if (state is PictureDrawingSuccess) {
+            AutoRouter.of(context).pop(true);
+          }
+          if (state is PictureDrawingLoading) {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (BuildContext context) {
+                return Center(
+                  child: SizedBox(
+                    height: 40,
+                    width: 40,
+                    child: Center(child: CupertinoActivityIndicator()),
+                  ),
+                );
+              },
+            );
+          }
+        },
+        builder: (context, state) {
+          if (state is PictureDrawingImageLoading) {
+            return Center(child: CupertinoActivityIndicator());
+          }
+          if (state is PictureDrawingImageFails) {
+            return Center(
+              child: Text(
+                'Не получислось загрущить изображение попробуйте позже',
+              ),
+            );
+          }
+          return SafeArea(
+            child: Column(
+              children: [
+                SizedBox(height: 16),
+                CanvasActions(
+                  currentWidth: currentWidth,
+                  currentColor: currentColor,
+                  isEraser: isEraser,
+                  onPickImagePressed: _onPickImagePressed,
+                  onShareToGalleryPressed: _onShareToGalleryPressed,
+                  onEraserPressed: () {
+                    setState(() {
+                      isEraser = !isEraser;
+                    });
+                  },
+                  onWidthPressed: (newWidth) {
+                    setState(() {
+                      currentWidth = newWidth;
+                    });
+                  },
+                  onColorPicked: (pickedColor) {
+                    setState(() {
+                      currentColor = pickedColor;
+                    });
+                  },
+                ),
+                SizedBox(height: 16),
+                Expanded(
+                  child: Canvas(
+                    canvasKey: canvasKey,
+                    currentColor: currentColor,
+                    currentWidth: currentWidth,
+                    isEraser: isEraser,
+                    image: state is PictureDrawingImageSuccess
+                        ? state.picture.picture
+                        : image,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}

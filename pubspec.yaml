@@ -1,0 +1,52 @@
+name: draw_vault
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ">=3.9.2 <4.0.0"
+
+dependencies:
+  auto_route: 11.1.0
+  cached_network_image: 3.4.1
+  cloud_firestore: 6.1.1
+  firebase_auth: 6.1.3
+  firebase_core: 4.3.0
+  flutter:
+    sdk: flutter
+  flutter_bloc: 9.1.1
+  flutter_local_notifications: 19.5.0
+  flutter_native_splash: 2.4.7
+  get_it: 9.2.0
+  image_picker: 1.2.1
+  injectable: 2.7.1+4
+  path_provider: 2.1.5
+  share_plus: 12.0.1
+  gal: 2.3.2
+  internet_connection_checker_plus: 2.9.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: 5.0.0
+  build_runner: 2.10.5
+  auto_route_generator: 10.4.0
+  injectable_generator: 2.12.0
+  flutter_launcher_icons: 0.14.4
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/logo/
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/logo/logo.png"
+  min_sdk_android: 21
+
+flutter_native_splash:
+  image: assets/logo/logo_simple.png
+  background_image: assets/images/bg.png
