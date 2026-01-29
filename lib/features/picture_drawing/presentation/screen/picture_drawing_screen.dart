@@ -64,10 +64,16 @@ class _PictureDrawingScreenState extends State<PictureDrawingScreen> {
     captureImage - из канваса в ui.Image
     convertImageToXFile - из ui.Image в файл чтобы потом сохранить в галерею
   */
-  Future<void> _onShareToGalleryPressed() async {
+  Future<void> _onShareToGalleryPressed(BuildContext context) async {
     final image = await captureImage(canvasKey: canvasKey);
     final xfile = await convertImageToXFile(image);
-    SharePlus.instance.share(ShareParams(files: [xfile]));
+    final box = context.findRenderObject() as RenderBox?;
+    SharePlus.instance.share(
+      ShareParams(
+        files: [xfile],
+        sharePositionOrigin: box!.localToGlobal(Offset.zero) & box.size,
+      ),
+    );
   }
 
   Future<void> _onSavePressed(BuildContext context) async {
@@ -176,7 +182,9 @@ class _PictureDrawingScreenState extends State<PictureDrawingScreen> {
                   currentColor: currentColor,
                   isEraser: isEraser,
                   onPickImagePressed: _onPickImagePressed,
-                  onShareToGalleryPressed: _onShareToGalleryPressed,
+                  onShareToGalleryPressed: (BuildContext context) {
+                    _onShareToGalleryPressed(context);
+                  },
                   onEraserPressed: () {
                     setState(() {
                       isEraser = !isEraser;
