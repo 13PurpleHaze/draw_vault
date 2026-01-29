@@ -26,10 +26,16 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>This app needs access to your photo library to import drawings.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>This app needs permission to save your drawings to your photo library.</string>
+	<string>Приложению необходим доступ к галерее для загрузки изображений в редактор для последующего их редактирования</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Приложению нужен доступ к галерее, чтобы сохранять изображения после редактирования</string>
+	<key>NSUserNotificationUsageDescription</key>
+	<string>Приложение использует уведомления, чтобы сообщать о сохранении изображений.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Камера не используется напрямую в приложении, но требуется библиотекой image_picker для корректной работы</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Микрофон не используется напрямую в приложении, но требуется библиотекой image_picker для корректной работы</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
