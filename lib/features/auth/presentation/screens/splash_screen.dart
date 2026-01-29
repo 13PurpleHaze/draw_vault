@@ -26,14 +26,17 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
+      listener: (context, state) async {
+        await Future.delayed(
+          const Duration(milliseconds: 100),
+        ); // формально чтобы увидеть этот экран
         if (state is AuthInitial) {
           AutoRouter.of(context).replace(const SignInRoute());
         } else {
           AutoRouter.of(context).replace(const PictureListRoute());
         }
       },
-      child: AppScaffold(body: Center(child: CupertinoActivityIndicator())),
+      child: AppScaffold(),
     );
   }
 }
