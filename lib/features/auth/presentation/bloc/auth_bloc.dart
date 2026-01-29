@@ -16,14 +16,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthSignInPressed>(_signIn);
     on<AuthSignOutPressed>(_signOut);
     on<AuthSignUpPressed>(_signUp);
-    on<AuthStartAuthenticated>(_startAuthenticated);
+    on<AuthCheckCurrentUser>(_checkCurrentUser);
   }
 
-  void _startAuthenticated(
-    AuthStartAuthenticated event,
-    Emitter<AuthState> emit,
-  ) {
-    emit(AuthSuccess(user: event.user));
+  void _checkCurrentUser(AuthCheckCurrentUser event, Emitter<AuthState> emit) {
+    final user = _authRepository.currentUser;
+    if (user != null) {
+      emit(AuthSuccess(user: user));
+    } else {
+      emit(AuthInitial());
+    }
   }
 
   AppUser? get currentUser {

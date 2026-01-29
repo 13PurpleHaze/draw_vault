@@ -23,20 +23,31 @@ class AppCustomPainter extends CustomPainter {
     // dst чтобы нарисовать изображение в определенной части холста
     if (backgroundImage != null) {
       final paint = Paint();
+
+      // Нужно чтобы картинка не растягивалась, а действовала подобно fit: contains
+      final imageWidth = backgroundImage!.width;
+      final imageHeight = backgroundImage!.height;
+
+      final imageAspect = imageWidth / imageHeight;
+      final canvasAspect = size.width / size.height;
+
+      Rect srcRect;
+
+      // Если картинка шире, то нужно обрезать по ширине, иначе по высоте
+      if (imageAspect > canvasAspect) {
+        final newWidth = imageHeight * canvasAspect;
+        final dx = (imageWidth - newWidth) / 2;
+        srcRect = Rect.fromLTWH(dx, 0, newWidth, imageHeight.toDouble());
+      } else {
+        final newHeight = imageWidth / canvasAspect;
+        final dy = (imageHeight - newHeight) / 2;
+        srcRect = Rect.fromLTWH(0, dy, imageWidth.toDouble(), newHeight);
+      }
+
       canvas.drawImageRect(
         backgroundImage!,
-        Rect.fromLTWH(
-          0,
-          0,
-          backgroundImage!.width.toDouble(),
-          backgroundImage!.height.toDouble(),
-        ), // берется все изображение
-        Rect.fromLTWH(
-          0,
-          0,
-          size.width,
-          size.height,
-        ), // рисуем его на весь холст
+        srcRect,
+        Rect.fromLTWH(0, 0, size.width, size.height),
         paint,
       );
     } else {

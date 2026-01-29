@@ -6,12 +6,14 @@ class AuthTextField extends StatelessWidget {
   final String hintText;
   final bool obscureText;
   final String? Function(String?)? validator;
+  final void Function(bool)? onChangedValid;
 
   const AuthTextField({
     super.key,
     required this.controller,
     required this.labelText,
     required this.hintText,
+    this.onChangedValid,
     this.validator,
     this.obscureText = false,
   });
@@ -42,7 +44,14 @@ class AuthTextField extends StatelessWidget {
         controller: controller,
         validator: validator,
         obscureText: obscureText,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
         decoration: InputDecoration(labelText: labelText, hintText: hintText),
+        onChanged: (value) {
+          if (validator != null && onChangedValid != null) {
+            final result = validator!(value);
+            onChangedValid!(result == null);
+          }
+        },
       ),
     );
   }

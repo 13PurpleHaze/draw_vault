@@ -13,6 +13,7 @@ import 'package:draw_vault/features/auth/presentation/bloc/auth_bloc.dart';
 import '../bloc/picture_drawing_bloc.dart';
 import '../widgets/widgets.dart';
 import '../../utils/utils.dart';
+import '../dialogs/dialogs.dart';
 
 /*
   Решил для создания и для регистрации использовать 1 экран, тк они практически полностью эдентичны
@@ -38,6 +39,7 @@ class _PictureDrawingScreenState extends State<PictureDrawingScreen> {
   image; // Нужен чтобы после того как выбрали изображение нарисовать его на канвасе
   GlobalKey canvasKey =
       GlobalKey(); // нужен чтобы из канваса сделать изображение
+  double? aspectRatio;
 
   @override
   void initState() {
@@ -48,6 +50,21 @@ class _PictureDrawingScreenState extends State<PictureDrawingScreen> {
         LoadPictureImageDrawing(userId: user.id, pictureId: widget.pictureId!),
       );
     }
+    // Фиксируем aspectRation, либо альбомная ореинтация либо портретная
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final choice = await showCanvasAspectRatioDialog(context);
+      if (choice != null) {
+        if (choice == 'Landscape') {
+          setState(() {
+            aspectRatio = 16 / 9;
+          });
+        } else {
+          setState(() {
+            aspectRatio = 9 / 16;
+          });
+        }
+      }
+    });
   }
 
   Future<void> _onPickImagePressed() async {
@@ -64,10 +81,16 @@ class _PictureDrawingScreenState extends State<PictureDrawingScreen> {
     captureImage - из канваса в ui.Image
     convertImageToXFile - из ui.Image в файл чтобы потом сохранить в галерею
   */
-  Future<void> _onShareToGalleryPressed() async {
+  Future<void> _onShareToGalleryPressed(BuildContext context) async {
     final image = await captureImage(canvasKey: canvasKey);
     final xfile = await convertImageToXFile(image);
-    SharePlus.instance.share(ShareParams(files: [xfile]));
+    final box = context.findRenderObject() as RenderBox?;
+    SharePlus.instance.share(
+      ShareParams(
+        files: [xfile],
+        sharePositionOrigin: box!.localToGlobal(Offset.zero) & box.size,
+      ),
+    );
   }
 
   Future<void> _onSavePressed(BuildContext context) async {
@@ -85,7 +108,6 @@ class _PictureDrawingScreenState extends State<PictureDrawingScreen> {
     setState(() {
       image = capturedImage;
     });
-
     if (widget.pictureId != null) {
       context.read<PictureDrawingBloc>().add(
         UpdatePicturePressed(
@@ -176,7 +198,9 @@ class _PictureDrawingScreenState extends State<PictureDrawingScreen> {
                   currentColor: currentColor,
                   isEraser: isEraser,
                   onPickImagePressed: _onPickImagePressed,
-                  onShareToGalleryPressed: _onShareToGalleryPressed,
+                  onShareToGalleryPressed: (BuildContext context) {
+                    _onShareToGalleryPressed(context);
+                  },
                   onEraserPressed: () {
                     setState(() {
                       isEraser = !isEraser;
@@ -195,14 +219,33 @@ class _PictureDrawingScreenState extends State<PictureDrawingScreen> {
                 ),
                 SizedBox(height: 16),
                 Expanded(
-                  child: Canvas(
-                    canvasKey: canvasKey,
-                    currentColor: currentColor,
-                    currentWidth: currentWidth,
-                    isEraser: isEraser,
-                    image: state is PictureDrawingImageSuccess
-                        ? state.picture.picture
-                        : image,
+                  child: Center(
+                    child: aspectRatio != null
+                        ? AspectRatio(
+                            aspectRatio: aspectRatio!,
+                            child: Canvas(
+                              canvasKey: canvasKey,
+                              currentColor: currentColor,
+                              currentWidth: currentWidth,
+                              isEraser: isEraser,
+                              image:
+                                  image ??
+                                  (state is PictureDrawingImageSuccess
+                                      ? state.picture.picture
+                                      : null),
+                            ),
+                          )
+                        : Canvas(
+                            canvasKey: canvasKey,
+                            currentColor: currentColor,
+                            currentWidth: currentWidth,
+                            isEraser: isEraser,
+                            image:
+                                image ??
+                                (state is PictureDrawingImageSuccess
+                                    ? state.picture.picture
+                                    : null),
+                          ),
                   ),
                 ),
               ],

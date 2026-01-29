@@ -7,7 +7,7 @@ class CanvasActions extends StatelessWidget {
   final Color currentColor;
   final bool isEraser;
   final void Function() onPickImagePressed;
-  final void Function() onShareToGalleryPressed;
+  final void Function(BuildContext context) onShareToGalleryPressed;
   final void Function() onEraserPressed;
   final void Function(double newWidth) onWidthPressed;
   final void Function(Color pickedColor) onColorPicked;
@@ -29,9 +29,15 @@ class CanvasActions extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        IconButton.filledTonal(
-          onPressed: onShareToGalleryPressed,
-          icon: Image.asset('assets/icons/download.png'),
+        Builder(
+          builder: (BuildContext context) {
+            return IconButton.filledTonal(
+              onPressed: () {
+                onShareToGalleryPressed(context);
+              },
+              icon: Image.asset('assets/icons/download.png'),
+            );
+          },
         ),
         IconButton.filledTonal(
           onPressed: onPickImagePressed,

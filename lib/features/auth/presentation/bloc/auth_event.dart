@@ -23,8 +23,4 @@ final class AuthSignUpPressed extends AuthEvent {
 
 final class AuthSignOutPressed extends AuthEvent {}
 
-final class AuthStartAuthenticated extends AuthEvent {
-  final AppUser user;
-
-  AuthStartAuthenticated({required this.user});
-}
+final class AuthCheckCurrentUser extends AuthEvent {}
