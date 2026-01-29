@@ -44,7 +44,7 @@ class _PictureListScreenState extends State<PictureListScreen> {
           Navigator.of(context).pop();
         }
         if (state is AuthSignOutSuccess) {
-          AutoRouter.of(context).replace(PictureListRoute());
+          AutoRouter.of(context).replace(SplashRoute());
         }
         if (state is AuthSignOutLoading) {
           showDialog(

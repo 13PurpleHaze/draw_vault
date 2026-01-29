@@ -29,8 +29,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   AppUser? get currentUser {
-    final state = this.state;
-    return state is AuthSuccess ? state.user : null;
+    return _authRepository.currentUser;
   }
 
   Future<void> _signIn(AuthSignInPressed event, Emitter<AuthState> emit) async {
