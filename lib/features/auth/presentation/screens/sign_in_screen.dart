@@ -9,6 +9,7 @@ import 'package:draw_vault/app/shared/shared.dart';
 import '../bloc/auth_bloc.dart';
 import '../../utils/utils.dart';
 import '../widgets/widgets.dart';
+import '../form/auth_form_field.dart';
 
 @RoutePage()
 class SignInScreen extends StatefulWidget {
@@ -22,7 +23,9 @@ class _SignInScreenState extends State<SignInScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isFormValid = false;
+  final Set<AuthFormField> _validFields = {};
+  bool get _isFormValid =>
+      _validFields.containsAll({AuthFormField.email, AuthFormField.password});
 
   @override
   void dispose() {
@@ -72,11 +75,6 @@ class _SignInScreenState extends State<SignInScreen> {
             Expanded(
               child: Form(
                 key: _formKey,
-                onChanged: () => setState(
-                  () =>
-                      _isFormValid = _formKey.currentState?.validate() ?? true,
-                ),
-                autovalidateMode: AutovalidateMode.onUnfocus,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -90,6 +88,15 @@ class _SignInScreenState extends State<SignInScreen> {
                       labelText: 'e-mail',
                       controller: _emailController,
                       validator: emailValidator,
+                      onChangedValid: (result) {
+                        setState(() {
+                          updateFieldValidity(
+                            result,
+                            AuthFormField.email,
+                            _validFields,
+                          );
+                        });
+                      },
                     ),
                     SizedBox(height: 20),
                     AuthTextField(
@@ -98,6 +105,15 @@ class _SignInScreenState extends State<SignInScreen> {
                       obscureText: true,
                       controller: _passwordController,
                       validator: passwordValidator,
+                      onChangedValid: (result) {
+                        setState(() {
+                          updateFieldValidity(
+                            result,
+                            AuthFormField.password,
+                            _validFields,
+                          );
+                        });
+                      },
                     ),
                   ],
                 ),

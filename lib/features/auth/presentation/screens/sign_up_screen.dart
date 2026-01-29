@@ -9,6 +9,7 @@ import 'package:draw_vault/app/shared/shared.dart';
 import '../bloc/auth_bloc.dart';
 import '../../utils/utils.dart';
 import '../widgets/widgets.dart';
+import '../form/auth_form_field.dart';
 
 @RoutePage()
 class SignUpScreen extends StatefulWidget {
@@ -24,7 +25,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  bool _isFormValid = false;
+  final Set<AuthFormField> _validFields = {};
+  bool get _isFormValid => _validFields.containsAll({
+    AuthFormField.email,
+    AuthFormField.password,
+    AuthFormField.name,
+    AuthFormField.confirmPassword,
+  });
 
   @override
   void dispose() {
@@ -71,17 +78,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
             Expanded(
               child: Form(
                 key: _formKey,
-                autovalidateMode: AutovalidateMode.onUnfocus,
-                onChanged: () => setState(
-                  () =>
-                      _isFormValid = _formKey.currentState?.validate() ?? true,
-                ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Align(
                       alignment: Alignment.bottomLeft,
-                      child: Image.asset('assets/images/login_title.png'),
+                      child: Image.asset('assets/images/register_title.png'),
                     ),
                     SizedBox(height: 20),
                     AuthTextField(
@@ -89,6 +91,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       labelText: 'Имя',
                       controller: _nameController,
                       validator: nameValidator,
+                      onChangedValid: (result) {
+                        setState(() {
+                          updateFieldValidity(
+                            result,
+                            AuthFormField.name,
+                            _validFields,
+                          );
+                        });
+                      },
                     ),
                     SizedBox(height: 20),
                     AuthTextField(
@@ -96,6 +107,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       labelText: 'e-mail',
                       controller: _emailController,
                       validator: emailValidator,
+                      onChangedValid: (result) {
+                        setState(() {
+                          updateFieldValidity(
+                            result,
+                            AuthFormField.email,
+                            _validFields,
+                          );
+                        });
+                      },
                     ),
                     SizedBox(height: 20),
                     AuthTextField(
@@ -104,6 +124,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       obscureText: true,
                       controller: _passwordController,
                       validator: passwordValidator,
+                      onChangedValid: (result) {
+                        setState(() {
+                          updateFieldValidity(
+                            result,
+                            AuthFormField.password,
+                            _validFields,
+                          );
+                        });
+                      },
                     ),
                     SizedBox(height: 20),
                     AuthTextField(
@@ -112,6 +141,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       obscureText: true,
                       controller: _confirmPasswordController,
                       validator: confirmPasswordValidator(_passwordController),
+                      onChangedValid: (result) {
+                        setState(() {
+                          updateFieldValidity(
+                            result,
+                            AuthFormField.confirmPassword,
+                            _validFields,
+                          );
+                        });
+                      },
                     ),
                   ],
                 ),
